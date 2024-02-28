@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import styles from "./css/select.module.css";
 import { SelectOption, SelectProps } from "./types/SelectPropsTypes";
 
 export function Select({ multiple, value, options, onChange }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
-  // to highlight hover option
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+
+  // adding useRef
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // to close the list
   function clearOptions() {
@@ -13,22 +15,23 @@ export function Select({ multiple, value, options, onChange }: SelectProps) {
   }
 
   // to select an option and show it
-  function selectOption(option: SelectOption) {
-    if (multiple) {
-      // checking if we already have selected this option
-      if (value.includes(option)) {
-        onChange(value.filter((o) => o !== option)); // => remove it from the list
+  const selectOption = useCallback(
+    (option: SelectOption) => {
+      if (multiple) {
+        if (value.includes(option)) {
+          onChange(value.filter((o) => o !== option));
+        } else {
+          onChange([...value, option]);
+        }
       } else {
-        onChange([...value, option]); // add option to the list
+        if (option !== value) onChange(option);
       }
-    } else {
-      if (option !== value) onChange(option); // if we select the selected option - nothing gonna change
-    }
-  }
+    },
+    [multiple, onChange, value]
+  );
 
   // to highlight selected option
   function isOptionSelected(option: SelectOption) {
-    // if option and value are the same element then it is the currently selected option
     return multiple ? value.includes(option) : option === value;
   }
 
@@ -37,14 +40,48 @@ export function Select({ multiple, value, options, onChange }: SelectProps) {
     if (isOpen) setHighlightedIndex(0);
   }, [isOpen]);
 
+  // to use keyboard
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target != containerRef.current) return;
+
+      switch (e.code) {
+        case "Enter":
+        case "Space":
+          setIsOpen((prev) => !prev);
+          if (isOpen) selectOption(options[highlightedIndex]);
+          break;
+        case "ArrowUp":
+        case "ArrowDown": {
+          if (!isOpen) {
+            setIsOpen(true);
+            break;
+          }
+
+          const newValue = highlightedIndex + (e.code === "ArrowDown" ? 1 : -1);
+          if (newValue >= 0 && newValue < options.length) {
+            setHighlightedIndex(newValue);
+          }
+          break;
+        }
+        case "Escape":
+          setIsOpen(false);
+          break;
+      }
+    };
+    containerRef.current?.addEventListener("keydown", handler);
+
+    return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      containerRef.current?.removeEventListener("keydown", handler);
+    };
+  }, [selectOption, isOpen, highlightedIndex, options]);
+
   return (
     <div
+      ref={containerRef}
       onClick={() => setIsOpen((prev) => !prev)}
-      // onBlur - click outside the div will close options list
       onBlur={() => setIsOpen(false)}
-      // The tabIndex allows to make HTML elements focusable, allow or prevent them from
-      // being sequentially focusable and determine their relative ordering
-      // for sequential focus navigation.
       tabIndex={0}
       className={styles.container}
     >
@@ -67,7 +104,6 @@ export function Select({ multiple, value, options, onChange }: SelectProps) {
       </span>
       <button
         onClick={(e) => {
-          // .stopPropagation() will stop the click event from going all the way to parent div
           e?.stopPropagation();
           clearOptions();
         }}
