@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { formatDuration } from "../utils/FormatDuration";
+import { formatDuration } from "../utils/formatDuration";
 import { formatTimeAgo } from "../utils/formatTimeAgo";
-import { VIEW_FORMATTER } from "../utils/FormatViews";
+import { VIEW_FORMATTER } from "../utils/formatViews";
 
 type VideoGridItemsProps = {
   id: string;
