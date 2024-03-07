@@ -1,6 +1,6 @@
 # to add module css
 
-## 1 - create types folder in scr
+## 1 - create types folder in src
 
 ## 2 - add file
 
