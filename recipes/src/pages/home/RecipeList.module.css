@@ -1,0 +1,17 @@
+.container {
+  margin: 1rem auto;
+  padding: 1rem;
+  background-color: aliceblue;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
